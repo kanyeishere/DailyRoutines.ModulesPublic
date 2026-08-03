@@ -59,7 +59,13 @@ public class AutoUmbralSoul : ModuleBase
 
     private unsafe bool UseRelatedActions()
     {
-        if (ICondition.Instance()[ConditionFlag.InCombat])
+        if (ICondition.Instance().Any
+            (
+                ConditionFlag.InCombat,
+                ConditionFlag.Mounted,
+                ConditionFlag.Mounting,
+                ConditionFlag.InFlight
+            ))
         {
             TaskHelper.Abort();
             return true;
@@ -69,6 +75,12 @@ public class AutoUmbralSoul : ModuleBase
 
         var localPlayer = Control.GetLocalPlayer();
         if (localPlayer == null) return false;
+
+        if (localPlayer->ClassJob != CLASS_JOB)
+        {
+            TaskHelper.Abort();
+            return true;
+        }
 
         // 六层灵极魂 → 耀星, 不把耀星打出来太亏了
         if (gauge.AstralSoulStacks == 6)
@@ -85,7 +97,8 @@ public class AutoUmbralSoul : ModuleBase
             action = TRANSPOSE;
         // 灵极冰状态 → 灵极魂转满
         else if (ActionManager.IsActionUnlocked(UMBRAL_SOUL) &&
-                 (gauge.UmbralHearts != 3 || gauge.UmbralIceStacks != 3))
+                 ((ActionManager.IsActionUnlocked(BLIZZARD4) && gauge.UmbralHearts != 3) ||
+                  gauge.UmbralIceStacks != 3))
             action = UMBRAL_SOUL;
 
         if (action == 0)
@@ -142,6 +155,7 @@ public class AutoUmbralSoul : ModuleBase
 
     private const uint UMBRAL_SOUL = 16506;
     private const uint TRANSPOSE   = 149;
+    private const uint BLIZZARD4  = 3576;
 
     #endregion
 }
